@@ -2,9 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>SignUp</title>
 </head>
 <body>
+    <div class = "topnav">
+        <a class = "sign" link href = "/"></a>
+        <a link href = "/SignIn">Sign In</a>
+        <a link href = "/SignUp">Sign Up</a>
+    </div>
 
+<form class = "signupform">
+    <label for="uname">Username:</label><br>
+    <input type="text" id="uname" name="uname"><br>
+    <label for = "fname">First name:</label><br>
+    <input type="text" id = "fname" name = "fname"><br>
+    <label for = "lname">Last name:</label><br>
+    <input type="text" id = "lname" name = "lname"><br>
+    <label for="pass">Password:</label><br>
+    <input type="password" id="pass" name="pass">
+    <input type = "submit" value = "Submit"><br>
+</form>
 </body>
 </html>

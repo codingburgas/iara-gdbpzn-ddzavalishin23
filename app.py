@@ -8,14 +8,14 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/templates/SignIn')
+@app.route('/SignIn')
 def SignIn():
-    return "<h1>Sign In page</h1><p>This is where the sign‑in form would be.</p>"
+    return render_template('SignIn.html')
 
 
-@app.route('/templates/SignUp')
+@app.route('/SignUp')
 def SignUp():
-    return "<h1>Sign Up page</h1><p>This is where the sign‑up form would be.</p>"
+    return render_template('SignUp.html')
 
 
 if __name__ == '__main__':

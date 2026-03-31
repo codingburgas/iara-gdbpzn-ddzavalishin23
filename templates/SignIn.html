@@ -2,9 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Sign In</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <div class = "topnav">
+        <a class = "sign" link href = "/"></a>
+        <a link href = "/SignIn">Sign In</a>
+        <a link href = "/SignUp">Sign Up</a>
+    </div>
 
+<form class="signinform">
+    <label for="uname">Username:</label><br>
+    <input type="text" id="uname" name="uname"><br>
+    <label for="pass">Password:</label><br>
+    <input type="password" id="pass" name="pass"><br>
+    <input type = "submit" value = "Submit">
+</form>
 </body>
 </html>
