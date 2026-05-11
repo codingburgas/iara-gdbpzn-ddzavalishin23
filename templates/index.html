@@ -1,17 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Springfield Fire Department</title>
 </head>
 <body>
-    <div class = "topnav">
-        <a class = "sign" link href = "/"></a>
-        <a link href = "/SignIn">Sign In</a>
-        <a link href = "/SignUp">Sign Up</a>
+    <!-- Navigation Bar -->
+    <nav class="topnav">
+        <a href="/" class="logo">SFD</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/about">About</a>
+            <a href="/services">Services</a>
+            <a href="/contact">Contact</a>
+            <a href="/SignIn">Sign In</a>
+            <a href="/SignUp" class="btn-nav">Join</a>
+        </div>
+    </nav>
+
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <p>🚨 In an emergency, dial <strong>911</strong> &nbsp;|&nbsp; Non‑emergency: (555) 123‑4567</p>
     </div>
-</body> 
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay">
+            <h1>Protecting Our Community<br>With Courage & Compassion</h1>
+            <p>Springfield Fire Department – dedicated to saving lives, property, and the environment since 1924.</p>
+            <div class="hero-buttons">
+                <a href="/about" class="btn-primary">Our Mission</a>
+                <a href="/services" class="btn-secondary">What We Do</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Cards -->
+    <section class="services container">
+        <h2>How We Serve You</h2>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🔥</div>
+                <h3>Fire Suppression</h3>
+                <p>Rapid, professional response to structural, wildland, and vehicle fires, 24/7.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🪓</div>
+                <h3>Technical Rescue</h3>
+                <p>Vehicle extrication, water rescue, high‑angle, and confined space operations.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🏫</div>
+                <h3>Community Programs</h3>
+                <p>CPR classes, fire extinguisher training, station tours, and smoke alarm installations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- News / Incidents -->
+    <section class="news container">
+        <h2>Recent News &amp; Incidents</h2>
+        <div class="news-grid">
+            <article class="news-item">
+                <span class="news-date">May 10, 2026</span>
+                <h4>Kitchen Fire Quickly Contained on Elm Street</h4>
+                <p>Engine 2 responded within 4 minutes. No injuries reported; family displaced but safe.</p>
+            </article>
+            <article class="news-item">
+                <span class="news-date">May 5, 2026</span>
+                <h4>Department Hosts Open House for Fire Prevention Week</h4>
+                <p>Over 300 residents attended, learned hands‑only CPR, and toured the new ladder truck.</p>
+            </article>
+            <article class="news-item">
+                <span class="news-date">April 28, 2026</span>
+                <h4>New Recruits Graduate from Academy</h4>
+                <p>Welcome Firefighters Martinez and Nyugen to Station 1!</p>
+            </article>
+        </div>
+        <a href="/news" class="btn-outline">All Updates →</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content container">
+            <div class="footer-col">
+                <h3>Springfield Fire Department</h3>
+                <p>1200 Firehouse Lane<br>Springfield, ST 98765</p>
+                <p>Non‑emergency: (555) 123‑4567</p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/services">Services</a></li>
+                    <li><a href="/recruitment">Join Our Team</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Follow Us</h4>
+                <p>Facebook | Twitter | Instagram</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Springfield Fire Department. All strength. All service.</p>
+        </div>
+    </footer>
+</body>
 </html>
