@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Карта на инцидентите</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .map-container { display: flex; height: 90vh; }
+        #map { flex: 3; height: 100%; }
+        .sidebar { flex: 1; padding: 20px; overflow-y: auto; background: #f4f4f4; }
+        .chat-box { border: 1px solid #ccc; height: 300px; overflow-y: scroll; background: white; margin-top: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <nav class="topnav">
+        <a href="{{ url_for('main.index') }}">Начало</a>
+        <a href="{{ url_for('main.map') }}">Карта</a>
+    </nav>
+
+    <div class="map-container">
+        <div id="map"></div>
+
+        <div class="sidebar">
+            <h2>Активни инциденти</h2>
+            {% for inc in incidents %}
+                <div class="card" style="margin-bottom: 15px; padding: 10px; background: white;">
+                    <h3>{{ inc.name }}</h3>
+                    <p><strong>Екип:</strong>
+                        {% for worker in inc.workers %}
+                            {{ worker.username }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([42.5048, 27.4626], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Добавяне на маркери от базата данни
+        {% for inc in incidents %}
+            L.marker([{{ inc.lat }}, {{ inc.lng }}]).addTo(map)
+                .bindPopup("<b>{{ inc.name }}</b>");
+        {% endfor %}
+    </script>
+</body>
+</html>

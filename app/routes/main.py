@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, session, redirect, url_for
 from functools import wraps
+from ..models import Incident
 
 main_bp = Blueprint('main', __name__)
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('auth.SignIn'))
+        if 'user_id' not in session: return redirect(url_for('auth.SignIn'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -19,3 +19,10 @@ def index():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+@main_bp.route('/map')
+@login_required
+def map():
+    # Извличаме всички инциденти от базата данни
+    incidents = Incident.query.all()
+    return render_template('map.html', incidents=incidents)

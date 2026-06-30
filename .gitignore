@@ -24,3 +24,15 @@ Thumbs.db
 # --- Database Files (if applicable) ---
 *.db
 *.sqlite3
+
+# --- Docker & Podman ---
+# Ignore environment secrets
+.env
+
+# Ignore local data persistence folders
+postgres_data/
+db_data/
+
+# Ignore local container logs or temporary state
+*.log
+containers/

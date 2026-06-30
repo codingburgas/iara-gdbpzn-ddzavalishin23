@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: gdpbzn_user
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: gdpbzn_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      # CRITICAL FIX: Tells the app it's inside a container (so it uses 'db' hostname)
+      RUNNING_IN_CONTAINER: 'true'
+      # Explicitly set these to override any .env file
+      POSTGRES_USER: gdpbzn_user
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: gdpbzn_db
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
