@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Пожарна безопасност Бургас</title>
+</head>
+<body>
+    <nav class="topnav">
+        <a href="{{ url_for('main.index') }}" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="{{ url_for('main.index') }}">Начало</a>
+            <a href="/about">За нас</a>
+            <a href="/services">Услуги</a>
+            <a href="/contact">Контакти</a>
+
+            {% if session.user_id %}
+                <a href="{{ url_for('main.dashboard') }}">Табло</a>
+                <a href="{{ url_for('auth.logout') }}">Изход</a>
+            {% else %}
+                <a href="{{ url_for('auth.SignIn') }}">Вход</a>
+                <a href="{{ url_for('auth.SignUp') }}">Регистрация</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="emergency-banner">
+        <p>При спешен случай звънете на <strong>112</strong> &nbsp;|&nbsp; Дежурен телефон: (056) 123‑456</p>
+    </div>
+
+    <section class="hero">
+        <div class="hero-overlay">
+            <h1>Защитаваме Бургас<br>със смелост и отдаденост</h1>
+            <p>Регионална дирекция „Пожарна безопасност и защита на населението” – Бургас.</p>
+            <div class="hero-buttons">
+                <a href="/about" class="btn-primary">Нашата мисия</a>
+                <a href="/services" class="btn-secondary">Какво правим</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="services container">
+        <h2>Нашите услуги</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>Пожарогасене</h3>
+                <p>Бърза и професионална реакция при пожари в сгради, гори и превозни средства – 24/7.</p>
+            </div>
+            <div class="card">
+                <h3>Технически спасителни дейности</h3>
+                <p>Извличане при катастрофи, водно спасяване, работа на височина и в затворени пространства.</p>
+            </div>
+            <div class="card">
+                <h3>Превантивни програми</h3>
+                <p>Курсове по първа помощ, обучение за пожарогасители, отворени врати и инсталация на димни детектори.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content container">
+            <div class="footer-col">
+                <h3>РДПБЗН – Бургас</h3>
+                <p>ул. „Транспортна” № 1<br>Бургас, 8000</p>
+                <p>Дежурен: (056) 123‑456</p>
+            </div>
+            <div class="footer-col">
+                <h4>Бързи връзки</h4>
+                <ul>
+                    <li><a href="/about">За нас</a></li>
+                    <li><a href="/services">Услуги</a></li>
+                    <li><a href="/recruitment">Стани доброволец</a></li>
+                    <li><a href="/contact">Контакти</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>s

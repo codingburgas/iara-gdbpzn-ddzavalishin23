@@ -1,0 +1,26 @@
+# --- Virtual Environment ---
+venv/
+env/
+.venv/
+
+# --- Python Bytecode & Cache ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Environment Secrets (CRITICAL) ---
+.env
+.flaskenv
+
+# --- IDE / Editor Metadata ---
+.vscode/
+.idea/
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Database Files (if applicable) ---
+*.db
+*.sqlite3

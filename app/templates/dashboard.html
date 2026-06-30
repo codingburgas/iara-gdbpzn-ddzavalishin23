@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Табло | ПБ-Бургас</title>
+</head>
+<body>
+    <nav class="topnav">
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/about">За нас</a>
+            <a href="/services">Услуги</a>
+            <a href="/contact">Контакти</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/logout">Изход</a>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="container" style="padding: 60px 20px; text-align: center;">
+        <h1>Добре дошли, {{ session.username }}!</h1>
+        <p>Това е защитеното табло за членове на екипа.</p>
+        <p>Тук ще виждате текущи произшествия, задачи и друга оперативна информация.</p>
+    </section>
+
+    <footer>
+        <div class="footer-content container">
+            <div class="footer-col">
+                <h3>РДПБЗН – Бургас</h3>
+                <p>ул. „Транспортна” № 1<br>Бургас, 8000</p>
+                <p>Дежурен: (056) 123‑456</p>
+            </div>
+            <div class="footer-col">
+                <h4>Бързи връзки</h4>
+                <ul>
+                    <li><a href="/about">За нас</a></li>
+                    <li><a href="/services">Услуги</a></li>
+                    <li><a href="/recruitment">Стани доброволец</a></li>
+                    <li><a href="/contact">Контакти</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Последвайте ни</h4>
+                <p>Facebook | Twitter | Instagram</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 РДПБЗН-Бургас. Смелост, чест, отговорност.</p>
+        </div>
+    </footer>
+</body>
+</html>

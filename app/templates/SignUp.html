@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Регистрация | ПБ-Бургас</title>
+</head>
+<body>
+    <nav class="topnav">
+        <a href="{{ url_for('main.index') }}" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="{{ url_for('main.index') }}">Начало</a>
+            <a href="/about">За нас</a>
+            <a href="/services">Услуги</a>
+            <a href="/contact">Контакти</a>
+            {% if session.user_id %}
+                <a href="{{ url_for('main.dashboard') }}">Табло</a>
+                <a href="{{ url_for('auth.logout') }}">Изход</a>
+            {% else %}
+                <a href="{{ url_for('auth.SignIn') }}">Вход</a>
+                <a href="{{ url_for('auth.SignUp') }}">Регистрация</a>
+            {% endif %}
+        </div>
+    </nav>
+    <div class="form-page">
+        <form class="auth-form" method="POST" action="{{ url_for('auth.SignUp') }}">
+            <h2>Създаване на профил</h2>
+            <label for="uname">Потребителско име</label>
+            <input type="text" id="uname" name="uname" required>
+
+            <label for="fname">Име</label>
+            <input type="text" id="fname" name="fname" required>
+
+            <label for="lname">Фамилия</label>
+            <input type="text" id="lname" name="lname" required>
+
+            <label for="pass">Парола</label>
+            <input type="password" id="pass" name="pass" required>
+
+            <button type="submit">Регистрация</button>
+            <p class="form-footer">Вече имате профил? <a href="{{ url_for('auth.SignIn') }}">Влезте тук</a></p>
+        </form>
+    </div>
+</body>
+</html>
