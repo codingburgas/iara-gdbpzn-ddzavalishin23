@@ -5,40 +5,56 @@ from sqlalchemy.exc import IntegrityError
 
 auth_bp = Blueprint('auth', __name__)
 
-
 @auth_bp.route('/SignIn', methods=['GET', 'POST'])
 def SignIn():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form.get('uname')).first()
         if user and user.check_password(request.form.get('pass')):
+            if not user.is_approved:
+                flash('Вашият профил все още не е одобрен. Моля, изчакайте администратор.', 'error')
+                return render_template('SignIn.html')
             session['user_id'] = user.id
             session['username'] = user.username
             return redirect(url_for('main.dashboard'))
-        flash('Invalid username or password.', 'error')
+        flash('Грешно потребителско име или парола.', 'error')
     return render_template('SignIn.html')
-
 
 @auth_bp.route('/SignUp', methods=['GET', 'POST'])
 def SignUp():
     if request.method == 'POST':
-        new_user = User(
-            username=request.form.get('uname'),
-            first_name=request.form.get('fname'),
-            last_name=request.form.get('lname')
-        )
-        new_user.set_password(request.form.get('pass'))
-        db.session.add(new_user)
+        username = request.form.get('uname')
+        first_name = request.form.get('fname')
+        last_name = request.form.get('lname')
+        password = request.form.get('pass')
+        phone = request.form.get('phone')
+        email = request.form.get('email') or None
 
+        if not all([username, first_name, last_name, password, phone]):
+            flash('Всички полета са задължителни.', 'error')
+            return render_template('SignUp.html')
+
+        if User.query.filter_by(username=username).first():
+            flash('Потребителското име вече съществува.', 'error')
+            return render_template('SignUp.html')
+
+        new_user = User(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            email=email,
+            is_approved=False
+        )
+        new_user.set_password(password)
+        db.session.add(new_user)
         try:
             db.session.commit()
-            flash('Registration successful! Please log in.', 'success')
+            flash('Регистрацията е успешна. Чакайте одобрение от администратор.', 'success')
             return redirect(url_for('auth.SignIn'))
         except IntegrityError:
             db.session.rollback()
-            flash('Username already exists. Please choose another.', 'error')
-
+            flash('Възникна грешка. Моля, опитайте отново.', 'error')
     return render_template('SignUp.html')
-
 
 @auth_bp.route('/logout')
 def logout():

@@ -16,7 +16,12 @@
             <a href="/">Начало</a>
             <a href="/dashboard">Табло</a>
             <a href="/map">Карта</a>
-            <a href="/incident/new">Нов инцидент</a>
+            {% if current_user and current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+            {% endif %}
+            {% if current_user and current_user.role in ['admin', 'operator'] %}
+                <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
             <a href="/logout">Изход</a>
         </div>
     </nav>

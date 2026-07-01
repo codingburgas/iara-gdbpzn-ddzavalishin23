@@ -32,6 +32,7 @@ services:
       - ./app:/app/app:Z
       - ./run.py:/app/run.py:Z
       - ./config.py:/app/config.py:Z
+      - ./migrations:/app/migrations
     depends_on:
       db:
         condition: service_healthy

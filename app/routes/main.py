@@ -34,6 +34,18 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def admin_or_operator_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('auth.SignIn'))
+        user = User.query.get(session['user_id'])
+        if user.role not in ['admin', 'operator']:
+            flash('Достъпът е само за администратори и оператори.', 'error')
+            return redirect(url_for('main.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # ============================================================================
 # PUBLIC ROUTES
@@ -106,7 +118,6 @@ def dashboard():
 def map():
     current_user = User.query.get(session['user_id'])
 
-    # Check if the current user is actively assigned to an incident
     active_assignment = IncidentAssignment.query.filter(
         IncidentAssignment.user_id == current_user.id,
         IncidentAssignment.status.in_(['assigned', 'en_route', 'on_scene'])
@@ -116,20 +127,15 @@ def map():
     incidents = []
 
     if active_assignment:
-        # Load the focused incident
         focused_incident = Incident.query.filter(
             Incident.id == active_assignment.incident_id
         ).first()
-
-        # Load other active incidents (excluding focused)
         other_incidents = Incident.query.filter(
             Incident.status.in_(['pending', 'dispatched', 'in_progress']),
             Incident.id != focused_incident.id
         ).all()
-
         incidents = [focused_incident] + other_incidents
     else:
-        # Load all active incidents
         incidents = Incident.query.filter(
             Incident.status.in_(['pending', 'dispatched', 'in_progress'])
         ).all()
@@ -142,11 +148,11 @@ def map():
 
 
 # ============================================================================
-# INCIDENT MANAGEMENT (ADMIN ONLY)
+# INCIDENT MANAGEMENT (ADMIN + OPERATOR)
 # ============================================================================
 
 @main_bp.route('/incident/new', methods=['GET', 'POST'])
-@admin_required
+@admin_or_operator_required
 def new_incident():
     if request.method == 'POST':
         name = request.form.get('name')
@@ -244,3 +250,68 @@ def resolve_incident(incident_id):
     db.session.commit()
     flash('Произшествието е маркирано като разрешено.', 'success')
     return redirect(url_for('main.incident_detail', incident_id=incident.id))
+
+
+# ============================================================================
+# ADMIN DASHBOARD (new combined page)
+# ============================================================================
+
+@main_bp.route('/admin/dashboard', methods=['GET'])
+@admin_required
+def admin_dashboard():
+    pending = User.query.filter_by(is_approved=False).all()
+    approved = User.query.filter_by(is_approved=True).all()
+    vehicles = Vehicle.query.filter_by(status='active').all()
+    return render_template('admin_dashboard.html', pending=pending, approved=approved, vehicles=vehicles)
+
+
+@main_bp.route('/admin/approve/<int:user_id>', methods=['POST'])
+@admin_required
+def approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    vehicle_id = request.form.get('vehicle_id')
+    if not vehicle_id:
+        flash('Моля, изберете автомобил (екип).', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        flash('Невалиден автомобил.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    user.is_approved = True
+    user.vehicle_id = vehicle.id
+    user.approved_by_id = session['user_id']
+    user.approved_at = datetime.now(timezone.utc)
+    db.session.commit()
+
+    flash(f'Потребителят {user.full_name} беше одобрен и добавен към автомобил {vehicle.plate_number}.', 'success')
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@main_bp.route('/admin/vehicle', methods=['POST'])
+@admin_required
+def create_vehicle():
+    plate_number = request.form.get('plate_number')
+    vehicle_type = request.form.get('vehicle_type')
+    capacity = request.form.get('capacity')
+
+    if not plate_number or not vehicle_type:
+        flash('Моля, попълнете номер и тип на автомобила.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    if Vehicle.query.filter_by(plate_number=plate_number).first():
+        flash('Автомобил с този номер вече съществува.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    vehicle = Vehicle(
+        plate_number=plate_number,
+        vehicle_type=vehicle_type,
+        capacity=int(capacity) if capacity else None,
+        status='active'
+    )
+    db.session.add(vehicle)
+    db.session.commit()
+
+    flash(f'Автомобил {plate_number} беше създаден успешно.', 'success')
+    return redirect(url_for('main.admin_dashboard'))

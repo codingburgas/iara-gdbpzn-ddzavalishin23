@@ -14,6 +14,9 @@
             <a href="{{ url_for('main.index') }}">Начало</a>
             <a href="/about">За нас</a>
             <a href="{{ url_for('main.map') }}">Карта</a>
+            {% if current_user and current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+            {% endif %}
             <a href="/services">Услуги</a>
             <a href="/contact">Контакти</a>
             {% if session.user_id %}
@@ -30,6 +33,12 @@
             <h2>Създаване на профил</h2>
             <label for="uname">Потребителско име</label>
             <input type="text" id="uname" name="uname" required>
+
+            <label for="phone">Телефон *</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <label for="email">Имейл</label>
+            <input type="email" id="email" name="email">
 
             <label for="fname">Име</label>
             <input type="text" id="fname" name="fname" required>

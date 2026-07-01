@@ -16,7 +16,12 @@
             <a href="/">Начало</a>
             <a href="/dashboard">Табло</a>
             <a href="/map">Карта</a>
-            <a href="/incident/new">Нов инцидент</a>
+            {% if current_user and current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+            {% endif %}
+            {% if current_user and current_user.role in ['admin', 'operator'] %}
+                <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
             <a href="/logout">Изход</a>
         </div>
     </nav>
@@ -78,50 +83,54 @@
                     {% endif %}
                 </div>
 
-                <!-- Resolve Incident Button -->
-                <div class="info-box" style="margin-top: 20px;">
-                    <form method="POST" action="{{ url_for('main.resolve_incident', incident_id=incident.id) }}">
-                        <button type="submit" class="btn-resolve" onclick="return confirm('Сигурни ли сте, че това произшествие е разрешено?')">
-                            Маркирай като разрешено
-                        </button>
-                    </form>
-                </div>
+                <!-- Resolve Incident Button (Admin only) -->
+                {% if current_user and current_user.role == 'admin' %}
+                    <div class="info-box" style="margin-top: 20px;">
+                        <form method="POST" action="{{ url_for('main.resolve_incident', incident_id=incident.id) }}">
+                            <button type="submit" class="btn-resolve" onclick="return confirm('Сигурни ли сте, че това произшествие е разрешено?')">
+                                Маркирай като разрешено
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
             </div>
 
-            <!-- Right Column: Map and Dispatch -->
+            <!-- Right Column: Map and Dispatch (Admin only) -->
             <div>
                 <div class="info-box">
                     <h3>Местоположение</h3>
                     <div id="mini-map"></div>
                 </div>
 
-                <div class="info-box" style="margin-top: 20px;">
-                    <h3>Изпрати екип</h3>
-                    <form method="POST" action="{{ url_for('main.assign_crew', incident_id=incident.id) }}" class="assign-form">
-                        <label for="user_id">Избери служител:</label>
-                        <select id="user_id" name="user_id">
-                            <option value="">-- Без служител --</option>
-                            {% for user in available_users %}
-                                <option value="{{ user.id }}">{{ user.full_name }} ({{ user.rank or 'Пожарникар' }})</option>
-                            {% endfor %}
-                        </select>
+                {% if current_user and current_user.role == 'admin' %}
+                    <div class="info-box" style="margin-top: 20px;">
+                        <h3>Изпрати екип</h3>
+                        <form method="POST" action="{{ url_for('main.assign_crew', incident_id=incident.id) }}" class="assign-form">
+                            <label for="user_id">Избери служител:</label>
+                            <select id="user_id" name="user_id">
+                                <option value="">-- Без служител --</option>
+                                {% for user in available_users %}
+                                    <option value="{{ user.id }}">{{ user.full_name }} ({{ user.rank or 'Пожарникар' }})</option>
+                                {% endfor %}
+                            </select>
 
-                        <label for="vehicle_id">Избери автомобил:</label>
-                        <select id="vehicle_id" name="vehicle_id">
-                            <option value="">-- Без автомобил --</option>
-                            {% for vehicle in available_vehicles %}
-                                <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
-                            {% endfor %}
-                        </select>
+                            <label for="vehicle_id">Избери автомобил:</label>
+                            <select id="vehicle_id" name="vehicle_id">
+                                <option value="">-- Без автомобил --</option>
+                                {% for vehicle in available_vehicles %}
+                                    <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
+                                {% endfor %}
+                            </select>
 
-                        <button type="submit" class="btn-dispatch">Изпрати</button>
-                    </form>
-
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                        <a href="{{ url_for('main.dashboard') }}" class="btn-secondary" style="display: inline-block; padding: 8px 16px; text-decoration: none; border: 1px solid #CC1F1F; color: #CC1F1F; border-radius: 4px;">
-                            Назад към таблото
-                        </a>
+                            <button type="submit" class="btn-dispatch">Изпрати</button>
+                        </form>
                     </div>
+                {% endif %}
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <a href="{{ url_for('main.dashboard') }}" class="btn-secondary" style="display: inline-block; padding: 8px 16px; text-decoration: none; border: 1px solid #CC1F1F; color: #CC1F1F; border-radius: 4px;">
+                        Назад към таблото
+                    </a>
                 </div>
             </div>
         </div>

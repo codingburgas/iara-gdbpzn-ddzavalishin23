@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Чакащи одобрение | ПБ-Бургас</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+</head>
+<body>
+    <nav class="topnav">
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/map">Карта</a>
+            <a href="/admin/pending">Чакащи одобрение</a>
+            <a href="/logout">Изход</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Чакащи одобрение</h1>
+        {% if pending %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Потребител</th>
+                        <th>Име</th>
+                        <th>Телефон</th>
+                        <th>Регистриран на</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in pending %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name }}</td>
+                        <td>{{ user.phone }}</td>
+                        <td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('main.approve_user', user_id=user.id) }}">
+                                <select name="vehicle_id" required>
+                                    <option value="">-- Избери автомобил --</option>
+                                    {% for vehicle in vehicles %}
+                                        <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-success">Одобри</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Няма чакащи потребители.</p>
+        {% endif %}
+        <a href="{{ url_for('main.dashboard') }}">Назад към таблото</a>
+    </div>
+</body>
+</html>

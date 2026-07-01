@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Администраторско табло | ПБ-Бургас</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <nav class="topnav">
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/map">Карта</a>
+            {% if current_user and current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+            {% endif %}
+            {% if current_user and current_user.role in ['admin', 'operator'] %}
+                <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
+            <a href="/logout">Изход</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1>Администраторско табло</h1>
+                <p style="color: #666; margin-top: 5px;">Управление на потребители и автомобили.</p>
+            </div>
+            <span class="badge">{{ pending|length }} чакащи одобрение</span>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-grid">
+            <!-- Left Column: Pending Approvals -->
+            <div class="admin-card">
+                <h2>Чакащи одобрение</h2>
+                {% if pending %}
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Потребител</th>
+                                    <th>Име</th>
+                                    <th>Телефон</th>
+                                    <th>Регистриран</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in pending %}
+                                    <tr>
+                                        <td><strong>{{ user.username }}</strong></td>
+                                        <td>{{ user.full_name }}</td>
+                                        <td>{{ user.phone }}</td>
+                                        <td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('main.approve_user', user_id=user.id) }}" class="form-inline">
+                                                <select name="vehicle_id" required>
+                                                    <option value="">-- Избери автомобил --</option>
+                                                    {% for vehicle in vehicles %}
+                                                        <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" class="btn-approve">Одобри</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>Няма чакащи потребители.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Create Vehicle -->
+            <div class="admin-card">
+                <h2>Създай нов автомобил</h2>
+                <form method="POST" action="{{ url_for('main.create_vehicle') }}">
+                    <div class="form-group">
+                        <label for="plate_number">Регистрационен номер *</label>
+                        <input type="text" id="plate_number" name="plate_number" placeholder="A 1234 BB" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vehicle_type">Тип *</label>
+                        <input type="text" id="vehicle_type" name="vehicle_type" placeholder="Цистерна, Спасителен, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Капацитет (брой екип)</label>
+                        <input type="number" id="capacity" name="capacity" placeholder="6">
+                    </div>
+                    <button type="submit" class="btn-create">Създай автомобил</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Approved Workers Section -->
+        <div class="admin-card" style="grid-column: 1 / -1; margin-top: 0;">
+            <h2>Одобрени служители</h2>
+            {% if approved %}
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Потребител</th>
+                                <th>Име</th>
+                                <th>Телефон</th>
+                                <th>Роля</th>
+                                <th>Автомобил</th>
+                                <th>Одобрен на</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in approved %}
+                                <tr>
+                                    <td><strong>{{ user.username }}</strong></td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td>{{ user.phone }}</td>
+                                    <td>{{ user.role }}</td>
+                                    <td>
+                                        {% if user.vehicle %}
+                                            <span class="vehicle-badge">{{ user.vehicle.plate_number }} ({{ user.vehicle.vehicle_type }})</span>
+                                        {% else %}
+                                            <span style="color: #888;">Не е назначен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.approved_at.strftime('%d.%m.%Y %H:%M') if user.approved_at else 'N/A' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>Все още няма одобрени служители.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <a href="{{ url_for('main.dashboard') }}" class="btn-back">Назад към таблото</a>
+    </div>
+</body>
+</html>

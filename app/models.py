@@ -16,13 +16,26 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=True)
+    phone = db.Column(db.String(20), nullable=False)  # now required
     role = db.Column(db.String(50), default='firefighter')
     rank = db.Column(db.String(50), nullable=True)
     employee_id = db.Column(db.String(50), unique=True, nullable=True)
     hire_date = db.Column(db.Date, nullable=True)
+
+    # New approval and assignment fields
+    is_approved = db.Column(db.Boolean, default=False, nullable=False)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)  # assigned vehicle
+
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+
+    # Relationships
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id], remote_side=[id], backref='approved_users')
+    vehicle = db.relationship('Vehicle', backref='crew_members')  # each vehicle has multiple users
+
+    # Existing relationships remain unchanged...
 
     # Relationships - with foreign_keys where ambiguity exists
     crew_assignments = db.relationship('CrewAssignment', backref='user', lazy='dynamic')

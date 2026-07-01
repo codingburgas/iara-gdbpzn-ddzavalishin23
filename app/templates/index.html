@@ -2,11 +2,9 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <title>Пожарна безопасност Бургас</title>
 </head>
 <body>
@@ -15,12 +13,18 @@
         <div class="nav-links">
             <a href="{{ url_for('main.index') }}">Начало</a>
             <a href="/about">За нас</a>
-            <a href="{{ url_for('main.map') }}">Карта</a>
             <a href="/services">Услуги</a>
             <a href="/contact">Контакти</a>
 
             {% if session.user_id %}
                 <a href="{{ url_for('main.dashboard') }}">Табло</a>
+                <a href="{{ url_for('main.map') }}">Карта</a>
+                {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+                {% endif %}
+                {% if current_user and current_user.role in ['admin', 'operator'] %}
+                    <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+                {% endif %}
                 <a href="{{ url_for('auth.logout') }}">Изход</a>
             {% else %}
                 <a href="{{ url_for('auth.SignIn') }}">Вход</a>
@@ -66,19 +70,25 @@
         <div class="footer-content container">
             <div class="footer-col">
                 <h3>РДПБЗН – Бургас</h3>
-                <p>ул. „Транспортна” № 1<br>Бургас, 8000</p>
-                <p>Дежурен: (056) 123‑456</p>
+                <p>ул. Транспортна № 1<br>Бургас, 8000</p>
+                <p>Дежурен: (056) 123-456</p>
             </div>
             <div class="footer-col">
                 <h4>Бързи връзки</h4>
                 <ul>
                     <li><a href="/about">За нас</a></li>
                     <li><a href="/services">Услуги</a></li>
-                    <li><a href="/recruitment">Стани доброволец</a></li>
                     <li><a href="/contact">Контакти</a></li>
                 </ul>
             </div>
+            <div class="footer-col">
+                <h4>Последвайте ни</h4>
+                <p>Facebook | Twitter | Instagram</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 РДПБЗН-Бургас. Смелост, чест, отговорност.</p>
         </div>
     </footer>
 </body>
-</html>s
+</html>
