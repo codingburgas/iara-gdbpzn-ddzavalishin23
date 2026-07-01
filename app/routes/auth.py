@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..models import User
 from .. import db
-from sqlalchemy.exc import IntegrityError  # ADDED for duplicate handling
+from sqlalchemy.exc import IntegrityError
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -10,7 +10,6 @@ auth_bp = Blueprint('auth', __name__)
 def SignIn():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form.get('uname')).first()
-        # Now check_password exists!
         if user and user.check_password(request.form.get('pass')):
             session['user_id'] = user.id
             session['username'] = user.username
@@ -22,7 +21,6 @@ def SignIn():
 @auth_bp.route('/SignUp', methods=['GET', 'POST'])
 def SignUp():
     if request.method == 'POST':
-        # FIXED: Save first_name and last_name from the form
         new_user = User(
             username=request.form.get('uname'),
             first_name=request.form.get('fname'),
@@ -31,7 +29,6 @@ def SignUp():
         new_user.set_password(request.form.get('pass'))
         db.session.add(new_user)
 
-        # FIXED: Handle duplicate username gracefully
         try:
             db.session.commit()
             flash('Registration successful! Please log in.', 'success')

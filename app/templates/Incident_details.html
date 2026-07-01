@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ incident.name }} | ПБ-Бургас</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/incident.css') }}">
+</head>
+<body>
+    <nav class="topnav">
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/map">Карта</a>
+            <a href="/incident/new">Нов инцидент</a>
+            <a href="/logout">Изход</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <h1 style="color: #CC1F1F;">{{ incident.name }}</h1>
+            <span class="status-badge status-{{ incident.status }}">
+                {{ incident.status|upper }}
+            </span>
+        </div>
+
+        <div class="detail-grid">
+            <!-- Left Column: Information and Assigned Teams -->
+            <div>
+                <div class="info-box">
+                    <h3>Информация</h3>
+                    <p><strong>Тип:</strong> {{ incident.incident_type }}</p>
+                    <p><strong>Тежест:</strong> {{ incident.severity }}</p>
+                    <p><strong>Адрес:</strong> {{ incident.address or 'Не е посочен' }}</p>
+                    <p><strong>Координати:</strong> {{ incident.lat }}, {{ incident.lng }}</p>
+                    <p><strong>Докладвано чрез:</strong> {{ incident.reported_by }}</p>
+                    <p><strong>Описание:</strong> {{ incident.description or 'Няма' }}</p>
+                    <p><strong>Опасни вещества:</strong> {{ incident.hazardous_materials or 'Няма' }}</p>
+                    <p><strong>Докладвано на:</strong> {{ incident.reported_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <h3>Изпратени екипи</h3>
+                    {% set assignments = incident.assignments.all() %}
+                    {% if assignments %}
+                        {% for assignment in assignments %}
+                            <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <strong>
+                                    {% if assignment.user %}
+                                        {{ assignment.user.full_name }}
+                                    {% elif assignment.vehicle %}
+                                        {{ assignment.vehicle.plate_number }}
+                                    {% endif %}
+                                </strong>
+                                <span style="color: #666; font-size: 0.9rem;">
+                                    - {{ assignment.status|replace('_', ' ')|upper }}
+                                </span>
+                                {% if assignment.last_lat %}
+                                    <br><span style="font-size: 0.8rem; color: #666;">{{ assignment.last_lat }}, {{ assignment.last_lng }}</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #666;">Все още няма изпратени екипи.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Resolve Incident Button -->
+                <div class="info-box" style="margin-top: 20px;">
+                    <form method="POST" action="{{ url_for('main.resolve_incident', incident_id=incident.id) }}">
+                        <button type="submit" class="btn-resolve" onclick="return confirm('Сигурни ли сте, че това произшествие е разрешено?')">
+                            Маркирай като разрешено
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Map and Dispatch -->
+            <div>
+                <div class="info-box">
+                    <h3>Местоположение</h3>
+                    <div id="mini-map"></div>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <h3>Изпрати екип</h3>
+                    <form method="POST" action="{{ url_for('main.assign_crew', incident_id=incident.id) }}" class="assign-form">
+                        <label for="user_id">Избери служител:</label>
+                        <select id="user_id" name="user_id">
+                            <option value="">-- Без служител --</option>
+                            {% for user in available_users %}
+                                <option value="{{ user.id }}">{{ user.full_name }} ({{ user.rank or 'Пожарникар' }})</option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="vehicle_id">Избери автомобил:</label>
+                        <select id="vehicle_id" name="vehicle_id">
+                            <option value="">-- Без автомобил --</option>
+                            {% for vehicle in available_vehicles %}
+                                <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn-dispatch">Изпрати</button>
+                    </form>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <a href="{{ url_for('main.dashboard') }}" class="btn-secondary" style="display: inline-block; padding: 8px 16px; text-decoration: none; border: 1px solid #CC1F1F; color: #CC1F1F; border-radius: 4px;">
+                            Назад към таблото
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('mini-map').setView([{{ incident.lat }}, {{ incident.lng }}], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([{{ incident.lat }}, {{ incident.lng }}]).addTo(map)
+            .bindPopup("<b>{{ incident.name }}</b>");
+    </script>
+</body>
+</html>

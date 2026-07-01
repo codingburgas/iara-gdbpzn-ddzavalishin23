@@ -1,0 +1,206 @@
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    padding: 30px 0;
+}
+
+/* Cards */
+.card-dashboard {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-dashboard h3 {
+    color: #CC1F1F;
+    border-bottom: 2px solid #CC1F1F;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-onleave {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-dispatched {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-in_progress {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-resolved {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-closed {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* User List */
+.user-list {
+    list-style: none;
+    padding: 0;
+}
+
+.user-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.user-list li:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Shift Cards */
+.shift-card {
+    background: #f8f9fa;
+    border-left: 4px solid #CC1F1F;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.shift-card h4 {
+    margin: 0 0 5px 0;
+    color: #1A1C23;
+}
+
+.shift-details {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.crew-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.crew-member {
+    background: #1A1C23;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #CC1F1F;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+/* Vehicle Cards */
+.vehicle-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.vehicle-card h4 {
+    margin: 0 0 5px 0;
+    color: #1A1C23;
+}
+
+.vehicle-type {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Incident Table */
+.incident-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.incident-table th {
+    background: #f8f9fa;
+    text-align: left;
+    padding: 10px;
+}
+
+.incident-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

@@ -1,4 +1,4 @@
-
+/* Reset & Base */
 * {
     margin: 0;
     padding: 0;
@@ -18,7 +18,7 @@ body {
     padding: 0 20px;
 }
 
-/* === NAVIGATION === */
+/* Navigation */
 .topnav {
     background-color: #1A1C23;
     display: flex;
@@ -50,7 +50,7 @@ body {
     color: #1A1C23;
 }
 
-/* === EMERGENCY BANNER === */
+/* Emergency Banner */
 .emergency-banner {
     background-color: #CC1F1F;
     color: white;
@@ -65,6 +65,7 @@ body {
     color: #F2A900;
 }
 
+/* Hero */
 .hero {
     background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55));
     min-height: 420px;
@@ -125,7 +126,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* === SERVICES SECTION === */
+/* Services */
 .services {
     padding: 60px 0;
     text-align: center;
@@ -158,11 +159,6 @@ body {
     transform: translateY(-5px);
 }
 
-.card-icon {
-    font-size: 2.8rem;
-    margin-bottom: 1rem;
-}
-
 .card h3 {
     color: #CC1F1F;
     margin-bottom: 0.5rem;
@@ -173,69 +169,7 @@ body {
     color: #555;
 }
 
-/* === NEWS SECTION === */
-.news {
-    padding: 40px 0 60px;
-}
-
-.news h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    text-align: center;
-    color: #1A1C23;
-}
-
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 25px;
-    margin-bottom: 2rem;
-}
-
-.news-item {
-    background: white;
-    border-left: 4px solid #CC1F1F;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border-radius: 0 6px 6px 0;
-}
-
-.news-date {
-    display: block;
-    font-size: 0.8rem;
-    color: #F2A900;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.news-item h4 {
-    margin-bottom: 0.5rem;
-    color: #1A1C23;
-}
-
-.news-item p {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.btn-outline {
-    display: inline-block;
-    padding: 12px 28px;
-    border: 2px solid #CC1F1F;
-    color: #CC1F1F;
-    text-decoration: none;
-    border-radius: 4px;
-    font-weight: 600;
-    margin-top: 1rem;
-    transition: all 0.3s;
-}
-
-.btn-outline:hover {
-    background: #CC1F1F;
-    color: white;
-}
-
-/* === FOOTER === */
+/* Footer */
 footer {
     background-color: #1A1C23;
     color: #ddd;
@@ -289,144 +223,28 @@ footer {
     color: #aaa;
 }
 
-/* === FLASH MESSAGES === */
-.flash-container {
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 0 20px;
-}
-
-.flash {
-    padding: 12px 18px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
-
-.flash.success {
-    background: #d4edda;
-    color: #155724;
-    border-left: 4px solid #28a745;
-}
-
-.flash.error {
-    background: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
-}
-
-.flash.info {
-    background: #d1ecf1;
-    color: #0c5460;
-    border-left: 4px solid #17a2b8;
-}
-
-/* === AUTH FORMS === */
-.form-page {
-    display: flex;
-    justify-content: center;
-    padding: 60px 20px;
-}
-
-.auth-form {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    padding: 35px 30px;
-    width: 100%;
-    max-width: 420px;
-}
-
-.auth-form h2 {
-    text-align: center;
-    color: #1A1C23;
-    margin-bottom: 1.5rem;
-}
-
-.auth-form label {
-    display: block;
-    margin: 12px 0 5px;
-    font-weight: 600;
-    color: #2D2D2D;
-}
-
-.auth-form input[type="text"],
-.auth-form input[type="password"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border 0.2s;
-}
-
-.auth-form input:focus {
-    border-color: #CC1F1F;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(204,31,31,0.2);
-}
-
-.auth-form button {
-    width: 100%;
-    margin-top: 20px;
-    padding: 12px;
-    background-color: #CC1F1F;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.auth-form button:hover {
-    background-color: #b71b1b;
-}
-
-.form-footer {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 0.9rem;
-}
-
-.form-footer a {
-    color: #CC1F1F;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.form-footer a:hover {
-    text-decoration: underline;
-}
-
-/* === RESPONSIVE === */
+/* Responsive */
 @media (max-width: 768px) {
     .topnav {
         flex-direction: column;
         height: auto;
         padding: 10px 0;
     }
-
     .nav-links {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
     }
-
     .nav-links a {
         padding: 10px 12px;
         font-size: 0.9rem;
     }
-
     .hero h1 {
         font-size: 2rem;
     }
-
     .hero p {
         font-size: 1rem;
     }
-
     .footer-content {
         flex-direction: column;
         text-align: center;

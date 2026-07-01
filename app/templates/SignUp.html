@@ -2,7 +2,9 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <title>Регистрация | ПБ-Бургас</title>
 </head>
 <body>
@@ -11,6 +13,7 @@
         <div class="nav-links">
             <a href="{{ url_for('main.index') }}">Начало</a>
             <a href="/about">За нас</a>
+            <a href="{{ url_for('main.map') }}">Карта</a>
             <a href="/services">Услуги</a>
             <a href="/contact">Контакти</a>
             {% if session.user_id %}

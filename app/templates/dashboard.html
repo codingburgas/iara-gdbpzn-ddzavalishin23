@@ -2,7 +2,9 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <title>Табло | ПБ-Бургас</title>
 </head>
 <body>
@@ -11,6 +13,7 @@
         <div class="nav-links">
             <a href="/">Начало</a>
             <a href="/about">За нас</a>
+            <a href="{{ url_for('main.map') }}">Карта</a>
             <a href="/services">Услуги</a>
             <a href="/contact">Контакти</a>
             <a href="/dashboard">Табло</a>
@@ -33,7 +36,42 @@
         <p>Това е защитеното табло за членове на екипа.</p>
         <p>Тук ще виждате текущи произшествия, задачи и друга оперативна информация.</p>
     </section>
-
+<!-- Active Incidents List -->
+<div class="card-dashboard" style="margin-bottom: 20px;">
+    <h3> Активни произшествия</h3>
+    {% if active_incidents %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; text-align: left;">
+                    <th style="padding: 10px;">Име</th>
+                    <th style="padding: 10px;">Тип</th>
+                    <th style="padding: 10px;">Статус</th>
+                    <th style="padding: 10px;">Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inc in active_incidents %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px;"><strong>{{ inc.name }}</strong></td>
+                        <td style="padding: 10px;">{{ inc.incident_type }}</td>
+                        <td style="padding: 10px;">
+                            <span class="status-badge status-{{ inc.status }}">
+                                {{ inc.status|upper }}
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <a href="{{ url_for('main.incident_detail', incident_id=inc.id) }}" style="color: #CC1F1F; text-decoration: none; font-weight: 600;">
+                                 Преглед
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: #666;">Няма активни произшествия.</p>
+    {% endif %}
+</div>
     <footer>
         <div class="footer-content container">
             <div class="footer-col">

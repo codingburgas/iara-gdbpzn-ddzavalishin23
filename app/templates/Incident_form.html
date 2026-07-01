@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ново произшествие | ПБ-Бургас</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/incident.css') }}">
+</head>
+<body>
+    <nav class="topnav">
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/map">Карта</a>
+            <a href="/incident/new">Нов инцидент</a>
+            <a href="/logout">Изход</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2>Регистрация на ново произшествие</h2>
+            <p style="color: #666;">Попълнете данните за инцидента. Кликнете върху картата, за да зададете GPS координати.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('main.new_incident') }}">
+                <div class="form-group">
+                    <label for="name">Име на произшествието *</label>
+                    <input type="text" id="name" name="name" placeholder="Пример: Горски пожар - Странджа" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="incident_type">Тип *</label>
+                    <select id="incident_type" name="incident_type" required>
+                        <option value="">Изберете...</option>
+                        <option value="fire">Пожар</option>
+                        <option value="forest_fire">Горски пожар</option>
+                        <option value="traffic_accident">ПТП</option>
+                        <option value="rescue">Спасителна акция</option>
+                        <option value="hazmat">Химическа авария</option>
+                        <option value="flood">Наводнение</option>
+                        <option value="other">Друго</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="severity">Степен на тежест</label>
+                    <select id="severity" name="severity">
+                        <option value="low">Ниска</option>
+                        <option value="medium" selected>Средна</option>
+                        <option value="high">Висока</option>
+                        <option value="critical">Критична</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Адрес</label>
+                    <input type="text" id="address" name="address" placeholder="ул. Примерна №1, Бургас">
+                </div>
+
+                <div class="coord-row">
+                    <div class="form-group">
+                        <label for="lat">Географска ширина (Latitude) *</label>
+                        <input type="number" step="any" id="lat" name="lat" placeholder="42.5048" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lng">Географска дължина (Longitude) *</label>
+                        <input type="number" step="any" id="lng" name="lng" placeholder="27.4626" required>
+                    </div>
+                </div>
+
+                <div id="map"></div>
+                <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">Кликнете върху картата, за да зададете координати автоматично.</p>
+
+                <div class="form-group">
+                    <label for="description">Описание</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Подробно описание на ситуацията..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="hazardous_materials">Идентифицирани опасни вещества</label>
+                    <input type="text" id="hazardous_materials" name="hazardous_materials" placeholder="Пример: Бензин, Хлор, Амоняк">
+                </div>
+
+                <div class="form-group">
+                    <label for="reported_by">Докладвано чрез</label>
+                    <select id="reported_by" name="reported_by">
+                        <option value="112">112</option>
+                        <option value="phone_call">Телефонен разговор</option>
+                        <option value="person">Лично съобщение</option>
+                        <option value="other">Друго</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit">Създай произшествие</button>
+                <a href="{{ url_for('main.dashboard') }}" style="display: inline-block; margin-left: 15px; color: #CC1F1F;">Отказ</a>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([42.5048, 27.4626], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker;
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+
+            document.getElementById('lat').value = lat;
+            document.getElementById('lng').value = lng;
+
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker([lat, lng]).addTo(map);
+        });
+    </script>
+</body>
+</html>

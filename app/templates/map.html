@@ -2,52 +2,130 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <title>Карта на инцидентите</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта на произшествията | ПБ-Бургас</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .map-container { display: flex; height: 90vh; }
-        #map { flex: 3; height: 100%; }
-        .sidebar { flex: 1; padding: 20px; overflow-y: auto; background: #f4f4f4; }
-        .chat-box { border: 1px solid #ccc; height: 300px; overflow-y: scroll; background: white; margin-top: 10px; padding: 10px; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
 </head>
 <body>
     <nav class="topnav">
-        <a href="{{ url_for('main.index') }}">Начало</a>
-        <a href="{{ url_for('main.map') }}">Карта</a>
+        <a href="/" class="logo">ПБ-Бургас</a>
+        <div class="nav-links">
+            <a href="/">Начало</a>
+            <a href="/dashboard">Табло</a>
+            <a href="/map">Карта</a>
+            <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            <a href="/logout">Изход</a>
+        </div>
     </nav>
 
     <div class="map-container">
         <div id="map"></div>
 
-        <div class="sidebar">
-            <h2>Активни инциденти</h2>
-            {% for inc in incidents %}
-                <div class="card" style="margin-bottom: 15px; padding: 10px; background: white;">
-                    <h3>{{ inc.name }}</h3>
-                    <p><strong>Екип:</strong>
-                        {% for worker in inc.workers %}
-                            {{ worker.username }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
+        <div class="map-sidebar">
+            <h2>Активни произшествия</h2>
+
+            {% if incidents %}
+                {% for inc in incidents %}
+                    <div class="incident-item {% if focused_incident and focused_incident.id == inc.id %}focused{% endif %}">
+                        <h3>{{ inc.name }}</h3>
+                        <div class="incident-meta">
+                            <p>
+                                <strong>Тип:</strong> {{ inc.incident_type }}<br>
+                                <strong>Тежест:</strong> {{ inc.severity }}<br>
+                                <strong>Статус:</strong>
+                                <span class="badge-status badge-{{ inc.status }}">
+                                    {{ inc.status|replace('_', ' ') }}
+                                </span>
+                                <br>
+                                <strong>Адрес:</strong> {{ inc.address or 'Не е посочен' }}<br>
+                                <strong>Координати:</strong> {{ inc.lat }}, {{ inc.lng }}
+                            </p>
+
+                            <div class="assigned-crew">
+                                <strong>Изпратени екипи:</strong>
+                                {% set assignments = inc.assignments.all() %}
+                                {% if assignments %}
+                                    {% for ass in assignments %}
+                                        <span>
+                                            {% if ass.user %}
+                                                {{ ass.user.full_name }} ({{ ass.assignment_type }})
+                                            {% elif ass.vehicle %}
+                                                {{ ass.vehicle.plate_number }} ({{ ass.vehicle.vehicle_type }})
+                                            {% endif %}
+                                            - {{ ass.status }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #888;">Все още няма изпратени екипи</span>
+                                {% endif %}
+                            </div>
+
+                            <a href="{{ url_for('main.incident_detail', incident_id=inc.id) }}" class="detail-link">
+                                Преглед на детайлите
+                            </a>
+
+                            {% if focused_incident and focused_incident.id == inc.id %}
+                                <div style="margin-top: 10px; padding: 8px; background: #F2A900; color: #1A1C23; border-radius: 4px; font-weight: 600; font-size: 0.85rem; text-align: center;">
+                                    Вашето текущо произшествие
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-incidents">
+                    <p>Няма активни произшествия в момента.</p>
                 </div>
-            {% endfor %}
+            {% endif %}
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([42.5048, 27.4626], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        document.addEventListener('DOMContentLoaded', function() {
+            var incidentsData = {{ incidents|tojson|safe }};
+            var focusedIncidentId = {{ focused_incident.id if focused_incident else 'null' }};
 
-        // Добавяне на маркери от базата данни
-        {% for inc in incidents %}
-            L.marker([{{ inc.lat }}, {{ inc.lng }}]).addTo(map)
-                .bindPopup("<b>{{ inc.name }}</b>");
-        {% endfor %}
+            var defaultLat = 42.5048;
+            var defaultLng = 27.4626;
+            var defaultZoom = 13;
+
+            if (focusedIncidentId) {
+                var focused = incidentsData.find(inc => inc.id === focusedIncidentId);
+                if (focused) {
+                    defaultLat = focused.lat;
+                    defaultLng = focused.lng;
+                    defaultZoom = 15;
+                }
+            } else if (incidentsData.length > 0) {
+                defaultLat = incidentsData[0].lat;
+                defaultLng = incidentsData[0].lng;
+                defaultZoom = 13;
+            }
+
+            var map = L.map('map').setView([defaultLat, defaultLng], defaultZoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'OpenStreetMap contributors'
+            }).addTo(map);
+
+            incidentsData.forEach(function(inc) {
+                var popupContent = '<b>' + inc.name + '</b><br>' +
+                                   'Тип: ' + inc.incident_type + '<br>' +
+                                   'Статус: ' + inc.status.replace('_', ' ') + '<br>' +
+                                   '<a href="/incident/' + inc.id + '">Детайли</a>';
+
+                var marker = L.marker([inc.lat, inc.lng]).addTo(map);
+                marker.bindPopup(popupContent);
+
+                if (focusedIncidentId && focusedIncidentId === inc.id) {
+                    marker.openPopup();
+                }
+            });
+        });
     </script>
 </body>
 </html>
