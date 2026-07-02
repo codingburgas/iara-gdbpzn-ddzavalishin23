@@ -127,9 +127,7 @@ def map():
     focused_incident = None
     incidents = []
 
-    # Check if the user has a vehicle assigned
     if current_user.vehicle_id:
-        # Find an active assignment for that vehicle
         vehicle_assignment = IncidentAssignment.query.filter(
             IncidentAssignment.vehicle_id == current_user.vehicle_id,
             IncidentAssignment.status.in_(['assigned', 'en_route', 'on_scene'])
@@ -137,7 +135,6 @@ def map():
         if vehicle_assignment:
             focused_incident = Incident.query.get(vehicle_assignment.incident_id)
 
-    # Load all active incidents, excluding the focused one if any
     if focused_incident:
         other_incidents = Incident.query.filter(
             Incident.status.in_(['pending', 'dispatched', 'in_progress']),
@@ -149,7 +146,6 @@ def map():
             Incident.status.in_(['pending', 'dispatched', 'in_progress'])
         ).all()
 
-    # Prepare JSON-serializable data for JavaScript
     incidents_data = []
     for inc in incidents:
         incidents_data.append({
@@ -219,13 +215,11 @@ def new_incident():
 def incident_detail(incident_id):
     incident = Incident.query.get_or_404(incident_id)
 
-    # Get IDs of vehicles already assigned to this incident (active assignments)
     assigned_vehicle_ids = [
         ass.vehicle_id for ass in incident.assignments
         if ass.status in ['assigned', 'en_route', 'on_scene']
     ]
 
-    # Query available vehicles: active and not already assigned
     if assigned_vehicle_ids:
         available_vehicles = Vehicle.query.filter(
             Vehicle.status == 'active',
@@ -391,3 +385,173 @@ def create_vehicle():
 
     flash(f'Автомобил {plate_number} беше създаден успешно.', 'success')
     return redirect(url_for('main.admin_dashboard'))
+
+
+# ============================================================================
+# USER PROFILE
+# ============================================================================
+
+# ============================================================================
+# USER PROFILE
+# ============================================================================
+
+@main_bp.route('/profile', methods=['GET'])
+@login_required
+def profile():
+    user = User.query.get(session['user_id'])
+
+    shifts = CrewAssignment.query.filter(
+        CrewAssignment.user_id == user.id,
+        CrewAssignment.status == 'active'
+    ).join(Shift).filter(Shift.end_time >= datetime.now(timezone.utc)).order_by(Shift.start_time).all()
+
+    leaves = LeaveRequest.query.filter_by(user_id=user.id).order_by(LeaveRequest.created_at.desc()).all()
+
+    return render_template('profile.html', user=user, shifts=shifts, leaves=leaves)
+
+
+@main_bp.route('/profile/update-email', methods=['POST'])
+@login_required
+def update_email():
+    user = User.query.get(session['user_id'])
+    email = request.form.get('email')
+    password = request.form.get('password')
+
+    if not password:
+        flash('Въведете текущата си парола.', 'error')
+        return redirect(url_for('main.profile'))
+    if not user.check_password(password):
+        flash('Грешна парола.', 'error')
+        return redirect(url_for('main.profile'))
+
+    user.email = email if email else None
+    db.session.commit()
+    flash('Имейлът беше обновен успешно.', 'success')
+    return redirect(url_for('main.profile'))
+
+
+@main_bp.route('/profile/update-phone', methods=['POST'])
+@login_required
+def update_phone():
+    user = User.query.get(session['user_id'])
+    phone = request.form.get('phone')
+    password = request.form.get('password')
+
+    if not password:
+        flash('Въведете текущата си парола.', 'error')
+        return redirect(url_for('main.profile'))
+    if not user.check_password(password):
+        flash('Грешна парола.', 'error')
+        return redirect(url_for('main.profile'))
+
+    user.phone = phone if phone else None
+    db.session.commit()
+    flash('Телефонът беше обновен успешно.', 'success')
+    return redirect(url_for('main.profile'))
+
+
+@main_bp.route('/profile/update-password', methods=['POST'])
+@login_required
+def update_password():
+    user = User.query.get(session['user_id'])
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    if not old_password or not new_password or not confirm_password:
+        flash('Всички полета за парола са задължителни.', 'error')
+        return redirect(url_for('main.profile'))
+    if new_password != confirm_password:
+        flash('Новите пароли не съвпадат.', 'error')
+        return redirect(url_for('main.profile'))
+    if not user.check_password(old_password):
+        flash('Грешна стара парола.', 'error')
+        return redirect(url_for('main.profile'))
+
+    user.set_password(new_password)
+    db.session.commit()
+    flash('Паролата беше сменена успешно.', 'success')
+    return redirect(url_for('main.profile'))
+# ============================================================================
+# LEAVE REQUESTS
+# ============================================================================
+
+@main_bp.route('/leave/request', methods=['POST'])
+@login_required
+def request_leave():
+    user = User.query.get(session['user_id'])
+    leave_type = request.form.get('leave_type')
+    start_date_str = request.form.get('start_date')
+    end_date_str = request.form.get('end_date')
+    reason = request.form.get('reason')
+
+    if not all([leave_type, start_date_str, end_date_str]):
+        flash('Моля, попълнете всички задължителни полета.', 'error')
+        return redirect(url_for('main.profile'))
+
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+    except ValueError:
+        flash('Невалиден формат на дата.', 'error')
+        return redirect(url_for('main.profile'))
+
+    if start_date > end_date:
+        flash('Началната дата не може да бъде след крайната.', 'error')
+        return redirect(url_for('main.profile'))
+
+    # Check for overlapping approved leave (optional)
+    overlapping = LeaveRequest.query.filter(
+        LeaveRequest.user_id == user.id,
+        LeaveRequest.status == 'approved',
+        LeaveRequest.start_date <= end_date,
+        LeaveRequest.end_date >= start_date
+    ).first()
+    if overlapping:
+        flash('Вече имате одобрен отпуск в този период.', 'error')
+        return redirect(url_for('main.profile'))
+
+    leave = LeaveRequest(
+        user_id=user.id,
+        leave_type=leave_type,
+        start_date=start_date,
+        end_date=end_date,
+        reason=reason,
+        status='pending'
+    )
+    db.session.add(leave)
+    db.session.commit()
+    flash('Заявката за отпуск беше изпратена успешно.', 'success')
+    return redirect(url_for('main.profile'))
+
+
+@main_bp.route('/admin/leaves')
+@admin_required
+def admin_leaves():
+    pending = LeaveRequest.query.filter_by(status='pending').order_by(LeaveRequest.created_at.desc()).all()
+    # Also fetch approved/rejected for history (optional)
+    # We'll show all for simplicity
+    all_leaves = LeaveRequest.query.order_by(LeaveRequest.created_at.desc()).all()
+    return render_template('admin_leaves.html', pending=pending, all_leaves=all_leaves)
+
+
+@main_bp.route('/admin/leave/<int:leave_id>/approve', methods=['POST'])
+@admin_required
+def approve_leave(leave_id):
+    leave = LeaveRequest.query.get_or_404(leave_id)
+    leave.status = 'approved'
+    leave.approved_by = session['user_id']
+    leave.approved_at = datetime.now(timezone.utc)
+    db.session.commit()
+    flash(f'Отпускът на {leave.user.full_name} беше одобрен.', 'success')
+    return redirect(url_for('main.admin_leaves'))
+
+
+@main_bp.route('/admin/leave/<int:leave_id>/reject', methods=['POST'])
+@admin_required
+def reject_leave(leave_id):
+    leave = LeaveRequest.query.get_or_404(leave_id)
+    leave.status = 'rejected'
+    db.session.commit()
+    flash(f'Отпускът на {leave.user.full_name} беше отхвърлен.', 'success')
+    return redirect(url_for('main.admin_leaves'))

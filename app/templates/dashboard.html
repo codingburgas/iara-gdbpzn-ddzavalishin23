@@ -2,27 +2,55 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <title>Табло | ПБ-Бургас</title>
 </head>
 <body>
-    <nav class="topnav">
-        <a href="/" class="logo">ПБ-Бургас</a>
-        <div class="nav-links">
-            <a href="/">Начало</a>
-            <a href="/about">За нас</a>
+<nav class="topnav">
+    <a href="{{ url_for('main.index') }}" class="logo">ПБ-Бургас</a>
+    <div class="nav-links">
+        <a href="{{ url_for('main.index') }}">Начало</a>
+
+        {% if session.user_id %}
+            <a href="{{ url_for('main.dashboard') }}">Табло</a>
             <a href="{{ url_for('main.map') }}">Карта</a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+            {% if current_user and current_user.role in ['admin', 'operator'] %}
+                <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
             {% endif %}
-            <a href="/services">Услуги</a>
-            <a href="/contact">Контакти</a>
-            <a href="/dashboard">Табло</a>
-            <a href="/logout">Изход</a>
-        </div>
-    </nav>
+            {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
+                <a href="{{ url_for('main.admin_leaves') }}">Управление на отпуски</a>
+            {% endif %}
+
+            {% if current_user %}
+            <div class="user-dropdown">
+                <button class="dropdown-toggle">
+                    <span class="user-avatar">{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}</span>
+                    {{ current_user.first_name }}
+                    <span style="font-size: 0.7rem;">▼</span>
+                </button>
+                <div class="dropdown-menu">
+                    <div class="dropdown-user-info">
+                        {{ current_user.full_name }}
+                        <small>@{{ current_user.username }}</small>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ url_for('main.profile') }}" class="dropdown-item">Профил</a>
+                    <form method="GET" action="{{ url_for('auth.logout') }}" style="margin: 0;">
+                        <button type="submit" class="dropdown-item" style="color: #CC1F1F;">Изход</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('auth.SignIn') }}">Вход</a>
+            <a href="{{ url_for('auth.SignUp') }}">Регистрация</a>
+        {% endif %}
+    </div>
+</nav>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -34,60 +62,172 @@
       {% endif %}
     {% endwith %}
 
-    <section class="container" style="padding: 60px 20px; text-align: center;">
-        <h1>Добре дошли, {{ session.username }}!</h1>
-        <p>Това е защитеното табло за членове на екипа.</p>
-        <p>Тук ще виждате текущи произшествия, задачи и друга оперативна информация.</p>
-    </section>
-<!-- Active Incidents List -->
-<div class="card-dashboard" style="margin-bottom: 20px;">
-    <h3> Активни произшествия</h3>
-    {% if active_incidents %}
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background: #f8f9fa; text-align: left;">
-                    <th style="padding: 10px;">Име</th>
-                    <th style="padding: 10px;">Тип</th>
-                    <th style="padding: 10px;">Статус</th>
-                    <th style="padding: 10px;">Действие</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for inc in active_incidents %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px;"><strong>{{ inc.name }}</strong></td>
-                        <td style="padding: 10px;">{{ inc.incident_type }}</td>
-                        <td style="padding: 10px;">
-                            <span class="status-badge status-{{ inc.status }}">
-                                {{ inc.status|upper }}
-                            </span>
-                        </td>
-                        <td style="padding: 10px;">
-                            <a href="{{ url_for('main.incident_detail', incident_id=inc.id) }}" style="color: #CC1F1F; text-decoration: none; font-weight: 600;">
-                                 Преглед
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p style="color: #666;">Няма активни произшествия.</p>
-    {% endif %}
-</div>
+    <div class="container">
+        <div style="padding: 20px 0;">
+            <h1 style="color: #1A1C23;">Оперативно табло</h1>
+            <p style="color: #555;">Добре дошли, <strong>{{ current_user.full_name }}</strong>.
+            Текуща дата и час: {{ datetime.now().strftime('%d.%m.%Y %H:%M') }}</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">{{ available_count }}</div>
+                <div class="stat-label">Свободни служители</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ unavailable_count }}</div>
+                <div class="stat-label">Недостъпни служители</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ active_incidents|length }}</div>
+                <div class="stat-label">Активни произшествия</div>
+            </div>
+        </div>
+
+        <div class="card-dashboard">
+            <h3>Активни произшествия</h3>
+            {% if active_incidents %}
+                <table class="incident-table">
+                    <thead>
+                        <tr>
+                            <th>Име</th>
+                            <th>Тип</th>
+                            <th>Статус</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inc in active_incidents %}
+                            <tr>
+                                <td><strong>{{ inc.name }}</strong></td>
+                                <td>{{ inc.incident_type }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ inc.status }}">
+                                        {{ inc.status|upper }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.incident_detail', incident_id=inc.id) }}" style="color: #CC1F1F; text-decoration: none; font-weight: 600;">
+                                        Преглед
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #666;">Няма активни произшествия.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-grid">
+            <div>
+                <div class="card-dashboard">
+                    <h3>Екипи и наличност</h3>
+                    <h4 style="color: #1A1C23; margin-top: 15px;">Всички служители</h4>
+                    <ul class="user-list">
+                        {% for item in users_with_status %}
+                            <li>
+                                <div class="user-info">
+                                    <strong>{{ item.user.full_name }}</strong>
+                                    <span class="user-role">(@{{ item.user.username }})</span>
+                                    {% if item.current_assignment %}
+                                        <span class="user-role">- {{ item.current_assignment.role }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if item.is_available %}
+                                        <span class="status-badge status-available">Свободен</span>
+                                    {% elif item.active_leave %}
+                                        <span class="status-badge status-onleave">
+                                            {% if item.active_leave.leave_type == 'vacation' %}Отпуск
+                                            {% elif item.active_leave.leave_type == 'sick' %}Болничен
+                                            {% else %}Командировка{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-unavailable">Не е на смяна</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div>
+                <div class="card-dashboard">
+                    <h3>Активни смени</h3>
+                    {% if active_shifts %}
+                        {% for shift in active_shifts %}
+                            <div class="shift-card">
+                                <h4>{{ shift.vehicle.plate_number }}</h4>
+                                <div class="shift-details">
+                                    <strong>{{ shift.vehicle.vehicle_type }}</strong><br>
+                                    Смяна: {{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }}<br>
+                                    Капацитет: {{ shift.vehicle.capacity }} души
+                                </div>
+                                <div class="crew-list">
+                                    {% for user in shift.assigned_crew %}
+                                        <span class="crew-member">{{ user.full_name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #666;">Няма активни смени в момента.</p>
+                    {% endif %}
+                </div>
+
+                <div class="card-dashboard">
+                    <h3>Всички автомобили</h3>
+                    {% for vehicle in all_vehicles %}
+                        <div class="vehicle-card">
+                            <h4>{{ vehicle.plate_number }}</h4>
+                            <div class="vehicle-type">{{ vehicle.vehicle_type }}</div>
+                            <div style="font-size: 0.85rem; color: #555;">
+                                Капацитет: {{ vehicle.capacity }} души
+                                {% if vehicle.status == 'active' %}Активен{% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="card-dashboard">
+                    <h3>Активни произшествия - бърз преглед</h3>
+                    {% if active_incidents %}
+                        {% for incident in active_incidents %}
+                            <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <strong>{{ incident.name }}</strong><br>
+                                <span style="font-size: 0.85rem; color: #666;">
+                                    {{ incident.lat }}, {{ incident.lng }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #666;">Няма активни произшествия.</p>
+                    {% endif %}
+                    <div style="margin-top: 10px;">
+                        <a href="{{ url_for('main.map') }}" class="btn-primary" style="display: inline-block; padding: 8px 16px; background: #CC1F1F; color: white; text-decoration: none; border-radius: 4px;">
+                            Виж всички на картата
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="footer-content container">
             <div class="footer-col">
                 <h3>РДПБЗН – Бургас</h3>
-                <p>ул. „Транспортна” № 1<br>Бургас, 8000</p>
-                <p>Дежурен: (056) 123‑456</p>
+                <p>ул. Транспортна № 1<br>Бургас, 8000</p>
+                <p>Дежурен: (056) 123-456</p>
             </div>
             <div class="footer-col">
                 <h4>Бързи връзки</h4>
                 <ul>
                     <li><a href="/about">За нас</a></li>
                     <li><a href="/services">Услуги</a></li>
-                    <li><a href="/recruitment">Стани доброволец</a></li>
                     <li><a href="/contact">Контакти</a></li>
                 </ul>
             </div>
