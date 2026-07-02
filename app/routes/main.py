@@ -260,7 +260,7 @@ def resolve_incident(incident_id):
 @admin_required
 def admin_dashboard():
     pending = User.query.filter_by(is_approved=False).all()
-    approved = User.query.filter_by(is_approved=True).all()
+    approved = User.query.filter_by(is_approved=True, is_active=True).all()
     vehicles = Vehicle.query.filter_by(status='active').all()
     return render_template('admin_dashboard.html', pending=pending, approved=approved, vehicles=vehicles)
 
@@ -314,4 +314,44 @@ def create_vehicle():
     db.session.commit()
 
     flash(f'Автомобил {plate_number} беше създаден успешно.', 'success')
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@main_bp.route('/admin/remove/<int:user_id>', methods=['POST'])
+@admin_required
+def remove_user(user_id):
+    user = User.query.get_or_404(user_id)
+    # Prevent admin from removing themselves
+    if user.id == session['user_id']:
+        flash('Не можете да премахнете собствения си акаунт.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    user.is_active = False
+    db.session.commit()
+    flash(f'Потребителят {user.full_name} беше премахнат от системата.', 'success')
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@main_bp.route('/admin/reassign/<int:user_id>', methods=['POST'])
+@admin_required
+def reassign_user(user_id):
+    user = User.query.get_or_404(user_id)
+    vehicle_id = request.form.get('vehicle_id')
+
+    if not vehicle_id:
+        flash('Моля, изберете автомобил.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        flash('Невалиден автомобил.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    old_vehicle = user.vehicle
+    user.vehicle_id = vehicle.id
+    db.session.commit()
+
+    flash(
+        f'Потребителят {user.full_name} беше преместен от {old_vehicle.plate_number if old_vehicle else "няма"} на {vehicle.plate_number}.',
+        'success')
     return redirect(url_for('main.admin_dashboard'))

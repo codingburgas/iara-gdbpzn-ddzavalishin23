@@ -47,11 +47,6 @@
     margin-top: 0;
 }
 
-.admin-card h3 {
-    color: #1A1C23;
-    margin-top: 0;
-}
-
 .table-container {
     overflow-x: auto;
 }
@@ -91,34 +86,33 @@
 
 .form-inline {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .form-inline select,
 .form-inline input {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     background: white;
 }
 
-.form-inline select {
-    min-width: 180px;
+.vehicle-select {
+    min-width: 150px;
 }
 
 .btn-approve {
     background: #28a745;
     color: white;
-    padding: 8px 20px;
+    padding: 6px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
     transition: background 0.2s;
 }
-
 .btn-approve:hover {
     background: #218838;
 }
@@ -133,9 +127,36 @@
     font-weight: 600;
     transition: background 0.2s;
 }
-
 .btn-create:hover {
     background: #0069d9;
+}
+
+.btn-reassign {
+    background: #17a2b8;
+    color: white;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.btn-reassign:hover {
+    background: #138496;
+}
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.btn-remove:hover {
+    background: #c82333;
 }
 
 .btn-back {
@@ -147,7 +168,6 @@
     border-radius: 4px;
     margin-top: 20px;
 }
-
 .btn-back:hover {
     background: #5a6268;
 }
@@ -155,14 +175,12 @@
 .form-group {
     margin-bottom: 15px;
 }
-
 .form-group label {
     display: block;
     font-weight: 600;
     margin-bottom: 5px;
     color: #1A1C23;
 }
-
 .form-group input {
     width: 100%;
     padding: 10px;
@@ -171,21 +189,11 @@
     box-sizing: border-box;
 }
 
-.form-row {
-    display: flex;
-    gap: 15px;
-}
-
-.form-row .form-group {
-    flex: 1;
-}
-
 .empty-state {
     text-align: center;
     padding: 40px 20px;
     color: #666;
 }
-
 .empty-state h3 {
     color: #1A1C23;
     margin-bottom: 10px;
@@ -207,10 +215,7 @@
         flex-direction: column;
         align-items: stretch;
     }
-    .form-inline select {
+    .vehicle-select {
         min-width: unset;
-    }
-    .form-row {
-        flex-direction: column;
     }
 }

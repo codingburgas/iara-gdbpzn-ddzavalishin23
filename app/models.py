@@ -25,6 +25,7 @@ class User(db.Model):
     # New approval and assignment fields
     is_approved = db.Column(db.Boolean, default=False, nullable=False)
     approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
     approved_at = db.Column(db.DateTime, nullable=True)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)  # assigned vehicle
 

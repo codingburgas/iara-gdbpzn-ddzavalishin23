@@ -2,10 +2,11 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | ПБ-Бургас</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-    <title>Регистрация | ПБ-Бургас</title>
 </head>
 <body>
     <nav class="topnav">
@@ -13,10 +14,6 @@
         <div class="nav-links">
             <a href="{{ url_for('main.index') }}">Начало</a>
             <a href="/about">За нас</a>
-            <a href="{{ url_for('main.map') }}">Карта</a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
-            {% endif %}
             <a href="/services">Услуги</a>
             <a href="/contact">Контакти</a>
             {% if session.user_id %}
@@ -28,29 +25,58 @@
             {% endif %}
         </div>
     </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="form-page">
         <form class="auth-form" method="POST" action="{{ url_for('auth.SignUp') }}">
             <h2>Създаване на профил</h2>
-            <label for="uname">Потребителско име</label>
-            <input type="text" id="uname" name="uname" required>
+            <p class="form-subtitle">Попълнете всички задължителни полета</p>
 
-            <label for="phone">Телефон *</label>
-            <input type="tel" id="phone" name="phone" required>
+            <div class="form-group">
+                <label for="uname">Потребителско име <span class="required">*</span></label>
+                <input type="text" id="uname" name="uname" placeholder="Изберете потребителско име" required>
+            </div>
 
-            <label for="email">Имейл</label>
-            <input type="email" id="email" name="email">
+            <div class="form-group">
+                <label for="fname">Име <span class="required">*</span></label>
+                <input type="text" id="fname" name="fname" placeholder="Вашето име" required>
+            </div>
 
-            <label for="fname">Име</label>
-            <input type="text" id="fname" name="fname" required>
+            <div class="form-group">
+                <label for="lname">Фамилия <span class="required">*</span></label>
+                <input type="text" id="lname" name="lname" placeholder="Вашата фамилия" required>
+            </div>
 
-            <label for="lname">Фамилия</label>
-            <input type="text" id="lname" name="lname" required>
+            <div class="form-group">
+                <label for="phone">Телефон <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" placeholder="0888 123 456" required>
+            </div>
 
-            <label for="pass">Парола</label>
-            <input type="password" id="pass" name="pass" required>
+            <div class="form-group">
+                <label for="email">Имейл</label>
+                <input type="email" id="email" name="email" placeholder="example@mail.com">
+                <span class="help-text">Незадължително, но препоръчително</span>
+            </div>
 
-            <button type="submit">Регистрация</button>
-            <p class="form-footer">Вече имате профил? <a href="{{ url_for('auth.SignIn') }}">Влезте тук</a></p>
+            <div class="form-group">
+                <label for="pass">Парола <span class="required">*</span></label>
+                <input type="password" id="pass" name="pass" placeholder="Минимум 6 символа" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Регистрация</button>
+
+            <div class="form-footer">
+                Вече имате профил? <a href="{{ url_for('auth.SignIn') }}">Влезте тук</a>
+            </div>
         </form>
     </div>
 </body>

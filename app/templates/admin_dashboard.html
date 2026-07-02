@@ -15,11 +15,11 @@
             <a href="/">Начало</a>
             <a href="/dashboard">Табло</a>
             <a href="/map">Карта</a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
-            {% endif %}
             {% if current_user and current_user.role in ['admin', 'operator'] %}
                 <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
+            {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
             {% endif %}
             <a href="/logout">Изход</a>
         </div>
@@ -113,7 +113,7 @@
 
         <!-- Approved Workers Section -->
         <div class="admin-card" style="grid-column: 1 / -1; margin-top: 0;">
-            <h2>Одобрени служители</h2>
+            <h2>Активни служители</h2>
             {% if approved %}
                 <div class="table-container">
                     <table class="table">
@@ -123,8 +123,9 @@
                                 <th>Име</th>
                                 <th>Телефон</th>
                                 <th>Роля</th>
-                                <th>Автомобил</th>
+                                <th>Автомобил (преместване)</th>
                                 <th>Одобрен на</th>
+                                <th>Премахване</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,13 +136,24 @@
                                     <td>{{ user.phone }}</td>
                                     <td>{{ user.role }}</td>
                                     <td>
-                                        {% if user.vehicle %}
-                                            <span class="vehicle-badge">{{ user.vehicle.plate_number }} ({{ user.vehicle.vehicle_type }})</span>
-                                        {% else %}
-                                            <span style="color: #888;">Не е назначен</span>
-                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('main.reassign_user', user_id=user.id) }}" class="form-inline">
+                                            <select name="vehicle_id" class="vehicle-select">
+                                                <option value="">-- Избери автомобил --</option>
+                                                {% for vehicle in vehicles %}
+                                                    <option value="{{ vehicle.id }}" {% if user.vehicle and user.vehicle.id == vehicle.id %}selected{% endif %}>
+                                                        {{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn-reassign">Премести</button>
+                                        </form>
                                     </td>
                                     <td>{{ user.approved_at.strftime('%d.%m.%Y %H:%M') if user.approved_at else 'N/A' }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('main.remove_user', user_id=user.id) }}" onsubmit="return confirm('Сигурни ли сте, че искате да премахнете този служител?');">
+                                            <button type="submit" class="btn-remove">Премахни</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -149,7 +161,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <p>Все още няма одобрени служители.</p>
+                    <p>Все още няма активни служители.</p>
                 </div>
             {% endif %}
         </div>
