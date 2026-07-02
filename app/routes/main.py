@@ -291,9 +291,16 @@ def resolve_incident(incident_id):
 @admin_required
 def admin_dashboard():
     pending = User.query.filter_by(is_approved=False).all()
-    approved = User.query.filter_by(is_approved=True, is_active=True).all()
+    active_users = User.query.filter_by(is_approved=True, is_active=True).all()
+    inactive_users = User.query.filter_by(is_approved=True, is_active=False).all()
     vehicles = Vehicle.query.filter_by(status='active').all()
-    return render_template('admin_dashboard.html', pending=pending, approved=approved, vehicles=vehicles)
+    return render_template(
+        'admin_dashboard.html',
+        pending=pending,
+        active_users=active_users,
+        inactive_users=inactive_users,
+        vehicles=vehicles
+    )
 
 
 @main_bp.route('/admin/approve/<int:user_id>', methods=['POST'])
@@ -387,9 +394,33 @@ def create_vehicle():
     return redirect(url_for('main.admin_dashboard'))
 
 
-# ============================================================================
-# USER PROFILE
-# ============================================================================
+@main_bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    import sys
+    try:
+        user = User.query.get_or_404(user_id)
+        vehicles = Vehicle.query.filter_by(status='active').all()
+        if request.method == 'POST':
+            user.first_name = request.form.get('first_name')
+            user.last_name = request.form.get('last_name')
+            user.phone = request.form.get('phone')
+            user.role = request.form.get('role')
+            user.is_approved = 'is_approved' in request.form
+            user.is_active = 'is_active' in request.form
+            vehicle_id = request.form.get('vehicle_id')
+            user.vehicle_id = int(vehicle_id) if vehicle_id else None
+            new_password = request.form.get('new_password')
+            if new_password:
+                user.set_password(new_password)
+            db.session.commit()
+            flash(f'Потребителят {user.full_name} беше обновен успешно.', 'success')
+            return redirect(url_for('main.admin_dashboard'))
+        return render_template('user_edit.html', user=user, vehicles=vehicles)
+    except Exception as e:
+        print(f"ERROR in edit_user: {e}", file=sys.stderr)
+        flash('Възникна грешка при зареждането на страницата.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
 
 # ============================================================================
 # USER PROFILE

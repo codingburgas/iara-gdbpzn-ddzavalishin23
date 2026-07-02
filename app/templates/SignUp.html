@@ -13,7 +13,6 @@
         <a href="{{ url_for('main.index') }}" class="logo">ПБ-Бургас</a>
         <div class="nav-links">
             <a href="{{ url_for('main.index') }}">Начало</a>
-
             {% if session.user_id %}
                 <a href="{{ url_for('main.dashboard') }}">Табло</a>
                 <a href="{{ url_for('auth.logout') }}">Изход</a>
@@ -59,11 +58,7 @@
                 <input type="tel" id="phone" name="phone" placeholder="0888 123 456" required>
             </div>
 
-            <div class="form-group">
-                <label for="email">Имейл</label>
-                <input type="email" id="email" name="email" placeholder="example@mail.com">
-                <span class="help-text">Незадължително, но препоръчително</span>
-            </div>
+            <!-- EMAIL FIELD REMOVED -->
 
             <div class="form-group">
                 <label for="pass">Парола <span class="required">*</span></label>
