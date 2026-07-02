@@ -149,3 +149,40 @@
         font-size: 1.5rem;
     }
 }
+/* ---- Auth forms mobile ---- */
+@media (max-width: 768px) {
+    .form-page {
+        padding: 20px 10px;
+        min-height: calc(100vh - 100px);
+    }
+
+    .auth-form {
+        padding: 20px 16px;
+        max-width: 100%;
+        margin: 0 10px;
+    }
+
+    .auth-form h2 {
+        font-size: 1.5rem;
+    }
+
+    .auth-form .form-group input {
+        font-size: 16px; /* prevents zoom on iOS */
+        padding: 12px;
+    }
+
+    .auth-form .btn-submit {
+        font-size: 1rem;
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-form {
+        padding: 16px 12px;
+    }
+
+    .auth-form h2 {
+        font-size: 1.3rem;
+    }
+}
