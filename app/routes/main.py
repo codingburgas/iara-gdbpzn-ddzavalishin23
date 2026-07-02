@@ -10,6 +10,7 @@ from .. import db
 
 main_bp = Blueprint('main', __name__)
 
+
 # ============================================================================
 # DECORATORS
 # ============================================================================
@@ -20,7 +21,9 @@ def login_required(f):
         if 'user_id' not in session:
             return redirect(url_for('auth.SignIn'))
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def admin_required(f):
     @wraps(f)
@@ -32,7 +35,9 @@ def admin_required(f):
             flash('Достъпът е само за администратори.', 'error')
             return redirect(url_for('main.dashboard'))
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def admin_or_operator_required(f):
     @wraps(f)
@@ -44,6 +49,7 @@ def admin_or_operator_required(f):
             flash('Достъпът е само за администратори и оператори.', 'error')
             return redirect(url_for('main.dashboard'))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -118,18 +124,21 @@ def dashboard():
 def map():
     current_user = User.query.get(session['user_id'])
 
-    active_assignment = IncidentAssignment.query.filter(
-        IncidentAssignment.user_id == current_user.id,
-        IncidentAssignment.status.in_(['assigned', 'en_route', 'on_scene'])
-    ).first()
-
     focused_incident = None
     incidents = []
 
-    if active_assignment:
-        focused_incident = Incident.query.filter(
-            Incident.id == active_assignment.incident_id
+    # Check if the user has a vehicle assigned
+    if current_user.vehicle_id:
+        # Find an active assignment for that vehicle
+        vehicle_assignment = IncidentAssignment.query.filter(
+            IncidentAssignment.vehicle_id == current_user.vehicle_id,
+            IncidentAssignment.status.in_(['assigned', 'en_route', 'on_scene'])
         ).first()
+        if vehicle_assignment:
+            focused_incident = Incident.query.get(vehicle_assignment.incident_id)
+
+    # Load all active incidents, excluding the focused one if any
+    if focused_incident:
         other_incidents = Incident.query.filter(
             Incident.status.in_(['pending', 'dispatched', 'in_progress']),
             Incident.id != focused_incident.id
@@ -140,10 +149,25 @@ def map():
             Incident.status.in_(['pending', 'dispatched', 'in_progress'])
         ).all()
 
+    # Prepare JSON-serializable data for JavaScript
+    incidents_data = []
+    for inc in incidents:
+        incidents_data.append({
+            'id': inc.id,
+            'name': inc.name,
+            'lat': inc.lat,
+            'lng': inc.lng,
+            'incident_type': inc.incident_type,
+            'status': inc.status,
+        })
+
+    focused_incident_id = focused_incident.id if focused_incident else None
+
     return render_template(
         'map.html',
         incidents=incidents,
-        focused_incident=focused_incident
+        incidents_data=incidents_data,
+        focused_incident_id=focused_incident_id
     )
 
 
@@ -195,14 +219,24 @@ def new_incident():
 def incident_detail(incident_id):
     incident = Incident.query.get_or_404(incident_id)
 
-    all_users = User.query.all()
-    available_users = [u for u in all_users if u.is_available_now()]
-    available_vehicles = Vehicle.query.filter_by(status='active').all()
+    # Get IDs of vehicles already assigned to this incident (active assignments)
+    assigned_vehicle_ids = [
+        ass.vehicle_id for ass in incident.assignments
+        if ass.status in ['assigned', 'en_route', 'on_scene']
+    ]
+
+    # Query available vehicles: active and not already assigned
+    if assigned_vehicle_ids:
+        available_vehicles = Vehicle.query.filter(
+            Vehicle.status == 'active',
+            ~Vehicle.id.in_(assigned_vehicle_ids)
+        ).all()
+    else:
+        available_vehicles = Vehicle.query.filter_by(status='active').all()
 
     return render_template(
         'incident_detail.html',
         incident=incident,
-        available_users=available_users,
         available_vehicles=available_vehicles
     )
 
@@ -212,17 +246,20 @@ def incident_detail(incident_id):
 def assign_crew(incident_id):
     incident = Incident.query.get_or_404(incident_id)
 
-    user_id = request.form.get('user_id')
     vehicle_id = request.form.get('vehicle_id')
 
-    if not user_id and not vehicle_id:
-        flash('Моля, изберете служител или автомобил за изпращане.', 'error')
+    if not vehicle_id:
+        flash('Моля, изберете автомобил за изпращане.', 'error')
+        return redirect(url_for('main.incident_detail', incident_id=incident.id))
+
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        flash('Невалиден автомобил.', 'error')
         return redirect(url_for('main.incident_detail', incident_id=incident.id))
 
     assignment = IncidentAssignment(
         incident_id=incident.id,
-        user_id=int(user_id) if user_id else None,
-        vehicle_id=int(vehicle_id) if vehicle_id else None,
+        vehicle_id=vehicle.id,
         assignment_type='crew',
         status='assigned'
     )
@@ -232,7 +269,7 @@ def assign_crew(incident_id):
         incident.status = 'dispatched'
 
     db.session.commit()
-    flash('Екипът беше изпратен успешно.', 'success')
+    flash(f'Автомобил {vehicle.plate_number} беше изпратен успешно.', 'success')
     return redirect(url_for('main.incident_detail', incident_id=incident.id))
 
 
@@ -253,7 +290,7 @@ def resolve_incident(incident_id):
 
 
 # ============================================================================
-# ADMIN DASHBOARD (new combined page)
+# ADMIN DASHBOARD
 # ============================================================================
 
 @main_bp.route('/admin/dashboard', methods=['GET'])
@@ -289,6 +326,45 @@ def approve_user(user_id):
     return redirect(url_for('main.admin_dashboard'))
 
 
+@main_bp.route('/admin/reassign/<int:user_id>', methods=['POST'])
+@admin_required
+def reassign_user(user_id):
+    user = User.query.get_or_404(user_id)
+    vehicle_id = request.form.get('vehicle_id')
+
+    if not vehicle_id:
+        flash('Моля, изберете автомобил.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        flash('Невалиден автомобил.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    old_vehicle = user.vehicle
+    user.vehicle_id = vehicle.id
+    db.session.commit()
+
+    flash(
+        f'Потребителят {user.full_name} беше преместен от {old_vehicle.plate_number if old_vehicle else "няма"} на {vehicle.plate_number}.',
+        'success')
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@main_bp.route('/admin/remove/<int:user_id>', methods=['POST'])
+@admin_required
+def remove_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == session['user_id']:
+        flash('Не можете да премахнете собствения си акаунт.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+
+    user.is_active = False
+    db.session.commit()
+    flash(f'Потребителят {user.full_name} беше премахнат от системата.', 'success')
+    return redirect(url_for('main.admin_dashboard'))
+
+
 @main_bp.route('/admin/vehicle', methods=['POST'])
 @admin_required
 def create_vehicle():
@@ -314,44 +390,4 @@ def create_vehicle():
     db.session.commit()
 
     flash(f'Автомобил {plate_number} беше създаден успешно.', 'success')
-    return redirect(url_for('main.admin_dashboard'))
-
-
-@main_bp.route('/admin/remove/<int:user_id>', methods=['POST'])
-@admin_required
-def remove_user(user_id):
-    user = User.query.get_or_404(user_id)
-    # Prevent admin from removing themselves
-    if user.id == session['user_id']:
-        flash('Не можете да премахнете собствения си акаунт.', 'error')
-        return redirect(url_for('main.admin_dashboard'))
-
-    user.is_active = False
-    db.session.commit()
-    flash(f'Потребителят {user.full_name} беше премахнат от системата.', 'success')
-    return redirect(url_for('main.admin_dashboard'))
-
-
-@main_bp.route('/admin/reassign/<int:user_id>', methods=['POST'])
-@admin_required
-def reassign_user(user_id):
-    user = User.query.get_or_404(user_id)
-    vehicle_id = request.form.get('vehicle_id')
-
-    if not vehicle_id:
-        flash('Моля, изберете автомобил.', 'error')
-        return redirect(url_for('main.admin_dashboard'))
-
-    vehicle = Vehicle.query.get(vehicle_id)
-    if not vehicle:
-        flash('Невалиден автомобил.', 'error')
-        return redirect(url_for('main.admin_dashboard'))
-
-    old_vehicle = user.vehicle
-    user.vehicle_id = vehicle.id
-    db.session.commit()
-
-    flash(
-        f'Потребителят {user.full_name} беше преместен от {old_vehicle.plate_number if old_vehicle else "няма"} на {vehicle.plate_number}.',
-        'success')
     return redirect(url_for('main.admin_dashboard'))

@@ -16,11 +16,11 @@
             <a href="/">Начало</a>
             <a href="/dashboard">Табло</a>
             <a href="/map">Карта</a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
-            {% endif %}
             {% if current_user and current_user.role in ['admin', 'operator'] %}
                 <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
+            {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
             {% endif %}
             <a href="/logout">Изход</a>
         </div>
@@ -64,10 +64,10 @@
                         {% for assignment in assignments %}
                             <div style="padding: 10px; border-bottom: 1px solid #eee;">
                                 <strong>
-                                    {% if assignment.user %}
-                                        {{ assignment.user.full_name }}
-                                    {% elif assignment.vehicle %}
-                                        {{ assignment.vehicle.plate_number }}
+                                    {% if assignment.vehicle %}
+                                        {{ assignment.vehicle.plate_number }} ({{ assignment.vehicle.vehicle_type }})
+                                    {% else %}
+                                        Неизвестен автомобил
                                     {% endif %}
                                 </strong>
                                 <span style="color: #666; font-size: 0.9rem;">
@@ -104,26 +104,22 @@
 
                 {% if current_user and current_user.role == 'admin' %}
                     <div class="info-box" style="margin-top: 20px;">
-                        <h3>Изпрати екип</h3>
-                        <form method="POST" action="{{ url_for('main.assign_crew', incident_id=incident.id) }}" class="assign-form">
-                            <label for="user_id">Избери служител:</label>
-                            <select id="user_id" name="user_id">
-                                <option value="">-- Без служител --</option>
-                                {% for user in available_users %}
-                                    <option value="{{ user.id }}">{{ user.full_name }} ({{ user.rank or 'Пожарникар' }})</option>
-                                {% endfor %}
-                            </select>
-
-                            <label for="vehicle_id">Избери автомобил:</label>
-                            <select id="vehicle_id" name="vehicle_id">
-                                <option value="">-- Без автомобил --</option>
-                                {% for vehicle in available_vehicles %}
-                                    <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
-                                {% endfor %}
-                            </select>
-
-                            <button type="submit" class="btn-dispatch">Изпрати</button>
-                        </form>
+                        <h3>Изпрати автомобил</h3>
+                        {% if available_vehicles %}
+                            <form method="POST" action="{{ url_for('main.assign_crew', incident_id=incident.id) }}" class="assign-form">
+                                <label for="vehicle_id">Избери автомобил:</label>
+                                <select id="vehicle_id" name="vehicle_id" required>
+                                    <option value="">-- Избери --</option>
+                                    {% for vehicle in available_vehicles %}
+                                        <option value="{{ vehicle.id }}">{{ vehicle.plate_number }} ({{ vehicle.vehicle_type }})</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn-dispatch">Изпрати</button>
+                            </form>
+                            <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">Изпраща целият екип на избрания автомобил.</p>
+                        {% else %}
+                            <p style="color: #666;">Всички активни автомобили вече са изпратени.</p>
+                        {% endif %}
                     </div>
                 {% endif %}
 

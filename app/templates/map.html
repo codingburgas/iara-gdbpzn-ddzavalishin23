@@ -16,11 +16,11 @@
             <a href="/">Начало</a>
             <a href="/dashboard">Табло</a>
             <a href="/map">Карта</a>
-            {% if current_user and current_user.role == 'admin' %}
-            <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
-            {% endif %}
             {% if current_user and current_user.role in ['admin', 'operator'] %}
                 <a href="{{ url_for('main.new_incident') }}">Нов инцидент</a>
+            {% endif %}
+            {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('main.admin_dashboard') }}">Администратор</a>
             {% endif %}
             <a href="/logout">Изход</a>
         </div>
@@ -34,7 +34,7 @@
 
             {% if incidents %}
                 {% for inc in incidents %}
-                    <div class="incident-item {% if focused_incident and focused_incident.id == inc.id %}focused{% endif %}">
+                    <div class="incident-item {% if focused_incident_id and focused_incident_id == inc.id %}focused{% endif %}">
                         <h3>{{ inc.name }}</h3>
                         <div class="incident-meta">
                             <p>
@@ -72,7 +72,7 @@
                                 Преглед на детайлите
                             </a>
 
-                            {% if focused_incident and focused_incident.id == inc.id %}
+                            {% if focused_incident_id and focused_incident_id == inc.id %}
                                 <div style="margin-top: 10px; padding: 8px; background: #F2A900; color: #1A1C23; border-radius: 4px; font-weight: 600; font-size: 0.85rem; text-align: center;">
                                     Вашето текущо произшествие
                                 </div>
@@ -91,8 +91,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var incidentsData = {{ incidents|tojson|safe }};
-            var focusedIncidentId = {{ focused_incident.id if focused_incident else 'null' }};
+            // Use the JSON-serializable data
+            var incidentsData = {{ incidents_data|tojson|safe }};
+            var focusedIncidentId = {{ focused_incident_id|tojson|safe }};
 
             var defaultLat = 42.5048;
             var defaultLng = 27.4626;
