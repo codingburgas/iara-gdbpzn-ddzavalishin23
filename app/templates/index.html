@@ -49,8 +49,8 @@
             <h1>Защитаваме Бургас<br>със смелост и отдаденост</h1>
             <p>Регионална дирекция „Пожарна безопасност и защита на населението" – Бургас.</p>
             <div class="hero-buttons">
-                <a href="/about" class="btn-primary">Нашата мисия</a>
-                <a href="/services" class="btn-secondary">Какво правим</a>
+                <a href="{{ url_for('auth.SignIn') }}" class="btn-primary">Вход в системата</a>
+                <a href="{{ url_for('auth.SignUp') }}" class="btn-secondary">Създай профил</a>
             </div>
         </div>
     </section>
