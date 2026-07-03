@@ -172,7 +172,7 @@ erDiagram
         float last_lng
         datetime last_location_update
     }
-
+```
 ### Relationship Summary
 
 | Relationship | Description |
