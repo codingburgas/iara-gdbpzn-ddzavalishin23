@@ -35,4 +35,4 @@ db_data/
 
 # Ignore local container logs or temporary state
 *.log
-containers/
+containers//migrations/
